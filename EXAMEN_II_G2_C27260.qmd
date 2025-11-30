@@ -50,10 +50,10 @@ moras <- moras %>%
   mutate(
     # Se calcula Z-score para SALARIO y se determinan los valores atípicos.
     # Se usa la formula de Z-score para la media y desviación se omiten los NAs. Note que si el valor era NA se mantendrá como NA.
-    ZSCORE_SALARIOS = (SALARIO - mean(SALARIO, na.rm = TRUE)) / sd(SALARIO, na.rm = TRUE),
+    ZSCORE_SALARIO = (SALARIO - mean(SALARIO, na.rm = TRUE)) / sd(SALARIO, na.rm = TRUE),
     
     # Se compara con 1.96 los NA siempre quedan como NAs 
-    ATIPICO_SALARIO = abs(ZSCORE_SALARIOS) > 1.96,
+    ATIPICO_SALARIO = abs(ZSCORE_SALARIO) > 1.96,
     
     # Análogo a lo de arriba.
     ZSCORE_EDAD = (EDAD - mean(EDAD, na.rm = TRUE)) / sd(EDAD, na.rm = TRUE),
@@ -71,5 +71,31 @@ porcentaje_na <- colSums(is.na(moras)) / nrow(moras) * 100
 porcentaje_na
 
 ```
+
+# 5 
+```{r}
+# Imputamos las numéricas por el promedio. 
+moras$SALARIO <- ifelse(is.na(moras$SALARIO), # Condición lógica
+                        mean(moras$SALARIO, na.rm = TRUE), # Si se cumple
+                        moras$SALARIO) # Si no se cumple
+
+moras$EDAD <- ifelse(is.na(moras$EDAD), 
+                     mean(moras$EDAD, na.rm = TRUE), 
+                     moras$EDAD)
+
+
+# Se crea un función para encontrar la moda de la variable categórica.
+moda <- function(x) {
+  tab <- table(x)           # Se crea una tabla de frecuencias de cada tipo de aseguramiento.
+  names(tab)[which.max(tab)]  # which.max() devuelve la posición del valor máximo en un vector y names (tab) devuelve los nombres de cada elemento de tab. Combinado, esta linea toma los nombres de tab y selecciona el que corresponde a la posición de la frecuencia máxima.
+}
+
+# Se imputa con la moda 
+moras$TIPO_ASEGURAMIENTO[is.na(moras$TIPO_ASEGURAMIENTO)] <- moda(moras$TIPO_ASEGURAMIENTO)
+
+```
+
+
+
 
 
