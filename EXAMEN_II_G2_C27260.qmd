@@ -1,5 +1,5 @@
 ---
-title: "Tarea3_CA0204_C27260"
+title: "EXAMEN_II_G2_C27260"
 author: "Emily Sánchez"
 subtitle: "CA0204 - Herramientas de Ciencia de Datos I"
 institute: "Universidad de Costa Rica"
