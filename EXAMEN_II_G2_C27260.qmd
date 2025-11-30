@@ -96,6 +96,39 @@ moras$TIPO_ASEGURAMIENTO[is.na(moras$TIPO_ASEGURAMIENTO)] <- moda(moras$TIPO_ASE
 ```
 
 
+# 6
+```{r}
+# Se hace una funcion que haga graficos donde se vea la cantidad de individuos por cada variable categórica. 
+graficar_categorias <- function(df, var) {
+  for (i in var) { # Se recorre cada nombre de cada variable 
+    plot <- df %>%
+      group_by(.data[[i]]) %>%   # agrupa por las categorías de la variable donde .data[[]] permite acceder los valores que contiene esa variable (columna).
+      summarise(cantidad = n()) %>%  # Se cuenta por grupo la cantidad de asegurados.
+      ggplot(aes(x = .data[[i]], y = cantidad, fill = .data[[i]])) + # se definen parametros x y y. Se llenan las barras dependiendo de la categoría.
+      geom_bar(stat = "identity") + # Para que no cambie los parametros que se definieron en el aes. 
+      labs(title = paste("Cantidad de individuos por", i), # titulo 
+           x = i,
+           y = "Cantidad") +
+      theme_minimal() +
+      theme(axis.text.x = element_blank()) # se quita los nombres de cada categoría en el eje x porque se ve redundante y para tipo_aseguramiento se ve feo. 
+    print(plot)
+  }
+}
+
+# Se define un vector con las columnas categóricas por graficar
+categoricas <- c("SEXO", "SECTOR", "INDICADOR_ACTIVO", 
+                 "INDICADOR.EXTRANJERO", "TIPO_ASEGURAMIENTO", 
+                 "INDICADOR_MOROSO")
+
+# Se llama a la función
+graficar_categorias(moras, categoricas)
+
+```
+
+
+
+
+
 
 
 
