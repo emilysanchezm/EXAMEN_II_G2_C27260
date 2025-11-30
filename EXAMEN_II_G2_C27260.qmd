@@ -27,7 +27,6 @@ moras$SALARIO <- gsub(",", ".", moras$SALARIO)
 
 ```
 
-
 # 2
 
 ```{r}
@@ -72,7 +71,8 @@ porcentaje_na
 
 ```
 
-# 5 
+# 5
+
 ```{r}
 # Imputamos las numéricas por el promedio. 
 moras$SALARIO <- ifelse(is.na(moras$SALARIO), # Condición lógica
@@ -95,8 +95,8 @@ moras$TIPO_ASEGURAMIENTO[is.na(moras$TIPO_ASEGURAMIENTO)] <- moda(moras$TIPO_ASE
 
 ```
 
-
 # 6
+
 ```{r}
 # Se hace una funcion que haga graficos donde se vea la cantidad de individuos por cada variable categórica. 
 graficar_categorias <- function(df, var) {
@@ -124,9 +124,11 @@ categoricas <- c("SEXO", "SECTOR", "INDICADOR_ACTIVO",
 graficar_categorias(moras, categoricas)
 
 ```
-Note que son los mismos gráficos de excel por lo que es el mismo análisis 
+
+Note que son los mismos gráficos de excel por lo que es el mismo análisis
 
 # 7
+
 ```{r}
 library(scales)
 typeof(moras$INDICADOR_MOROSO) # Tipo caracter no funciona para el cálculo 
@@ -172,9 +174,7 @@ categoricas2 <- c("SEXO", "SECTOR", "INDICADOR_ACTIVO",
 graficos_morosos(moras, categoricas2)
 ```
 
-Note que son los mismos gráficos de excel por lo que es el mismo análisis 
-
-
+Note que son los mismos gráficos de excel, por lo que, es el mismo análisis
 
 # 8
 
@@ -190,7 +190,7 @@ colSums(is.na(moras)) / nrow(moras) * 100  # Se verifica que se haya revertido b
 
 # Se calcula la edad promedio por condición de morosidad
 edad_promedio <- moras %>%
-  group_by(INDICADOR_MOROSO) %>% # Agrupamos a las personas ya sea que son o no morosas
+  group_by(INDICADOR_MOROSO) %>% # Agrupamos a las personas por estado de morosidad 
   summarise(promedio = mean(EDAD))  # Se calulan los promedios de edades para cada grupo
 
 
@@ -224,13 +224,62 @@ ggplot(salario_promedio,
   coord_flip() 
 
 ```
-Note que son los mismos gráficos de excel por lo que es el mismo análisis 
+
+Note que son los mismos gráficos de excel, por lo que, es el mismo análisis
+
+# 10
+
+```{r}
+# Se convierten las variables categóricas a factor. Es importante, porque aquí se especifica que estas columnas son categorías o grupos.
+moras$SEXO <- as.factor(moras$SEXO)
+moras$SECTOR <- as.factor(moras$SECTOR)
+moras$INDICADOR_ACTIVO <- as.factor(moras$INDICADOR_ACTIVO)
+moras$INDICADOR.EXTRANJERO <- as.factor(moras$INDICADOR.EXTRANJERO)
+moras$TIPO_ASEGURAMIENTO <- as.factor(moras$TIPO_ASEGURAMIENTO)
+moras$INDICADOR_MOROSO <- as.factor(moras$INDICADOR_MOROSO)
+
+# Recodificar tipo de aseguramiento. Se simplifican los nombres largos de la columna TIPO_ASEGURAMIENTO porque al imprimir el árbol de decisión sin esto no logran salir todas las categorías completas. 
+moras$TIPO_ASEGURAMIENTO <- recode(moras$TIPO_ASEGURAMIENTO, 
+  "ASALARIADO" = "A",
+  "CONVENIOS ESPECIALES DE ASEGURADOS VOLUNTARIOS" = "CEAV",
+  "ASEGURADO VOLUNTARIO" = "AV", 
+  "TRABAJADOR INDEPENDIENTE" = "TI", 
+  "PENSIONADOS EN SU PROPIO SISTEMA" = "PS",
+  "CONVENIOS ESPECIALES DE TRABAJADORES INDEPENDIENTES" = "CETI"
+)
+
+# Se crea un dataframe sin identificador. La columna IDENTIFICACION es única para cada persona, entonces no aporta en nada tenerlo en el árbol de decisión. 
+df_tree <- moras %>% select(-IDENTIFICACION)
 
 
+# Se descargan las librerias correspondientes donde:
+library(rpart) # Sirve para construir los árboles de decisión
+library(rpart.plot) # Permite hacer plots de los árboles
 
+# Se construye el árbol de clasificación. Se quiere predecir INDICADOR_MOROSO usando todas las demás columnas (.)
+tree <- rpart(INDICADOR_MOROSO ~ ., data = df_tree, method = "class")
 
+# Se grafica el árbol. Cex = 0.7 ajusta el tamaño del texto.
+rpart.plot(tree, cex = 0.7)
 
+```
 
+El árbol de decisión es una herramienta visual que ayuda a comprender cómo ciertos factores de las personas aseguradas influyen en la probabilidad de que estas se vuelvan o no morosas. Su función principal es dividir a la población en grupos con características similares y estimar para cada uno de ellos qué tan probable es que tengan problemas de pago. Esto permite identificar perfiles de mayor y menor riesgo y, a partir de ello, tomar decisiones más informadas sobre gestión de cobros, políticas de seguimiento o estrategias de prevención.
 
+Al iniciar la lectura del árbol, el primer elemento (nodo) contiene al 100% de la población donde la mayor parte del grupo no es moroso. Posteriormente, se observa una pregunta relacionada con el tipo de aseguramiento que tiene la persona. El modelo separa a todos los asegurados en dos grupos: quienes pertenecen a ciertos tipos específicos de aseguramiento (identificados por A, AV, CEAV, CETI y PS) y quienes no (TI). Esta división es la más importante del árbol y funciona como punto de partida para clasificar el riesgo. El comportamiento del grupo que sí pertenece a esos tipos particulares es evidente: la gran mayoría de ellos no es morosa, como lo muestra la primera rama del árbol. En este grupo el nivel estimado de morosidad es bajo (11%), y además constituye la mayor parte de la población analizada (86%). Es decir, según este árbol, la gran mayoría de asegurados con estos tipos de seguro presentan un riesgo muy bajo de caer en morosidad.
 
+Para quienes no pertenecen a ese conjunto de tipos de aseguramiento donde predomina la no morosidad, el árbol continúa evaluando otros factores. En ese segundo nivel aparece otra característica relevante: si la persona es o no extranjera. Aquí se observa una diferencia marcada. Dentro de las personas cuyo tipo de aseguramiento no está en el primer grupo (es decir pertenecen a la categoría de trabajadores independientes), quienes sí son extranjeras muestran una probabilidad muy alta de ser morosas, cercana al 81%. Además, aunque este grupo es pequeño (respresenta el 2% de la población total), su nivel de riesgo es el más elevado de todo el árbol. Esto indica que, bajo estas condiciones específicas, el estatus de persona extranjera se asocia con una mayor vulnerabilidad o probabilidad de caer en morosidad. Desde una perspectiva de decisiones empresariales, este subgrupo podría considerarse riesgoso y una prioridad en términos de seguimiento y prevención de caer en mora (Note que esto también se visualizó en el análisis hecho en excel).
 
+Si la persona no es extranjera, el árbol sigue profundizando y evalúa otro factor importante: el salario. En particular, el modelo identifica un punto de quiebre en ₡304.000. Dentro de este grupo de personas no extranjeras, el árbol divide a los asegurados según si su ingreso es inferior o superior a ese monto. Quienes ganan menos de ₡304.000 constituyen el 4% del total y, aunque el modelo los clasifica mayoritariamente como no morosos, el 0.40 indica que hay una presencia moderada de morosidad dentro del grupo. Por otro lado, quienes tienen ingresos iguales o superiores al umbral representan el 8% del total y el modelo los clasifica como morosos, mostrando con el 0.58 que es un grupo más mezclado, pero dominado por la morosidad. Es decir, este conjunto de asegurados no extranjeros con variaciones en su nivel salarial podría beneficiarse de programas preventivos, recordatorios de pago o estrategias de acompañamiento, dado que presentan patrones que incrementan su probabilidad relativa de caer en morosidad comparados con otras ramas.
+
+En resumen, el árbol divide la población en rutas que dependen de preguntas secuenciales: primero, qué tipo de seguro tiene, luego, si es extranjera, finalmente, si su salario es inferior a ₡304.000. Estas preguntas corresponden a los factores que, según los datos, permiten distinguir mejor entre personas morosas y no morosas. El resultado final es un conjunto de perfiles diferenciados según el riesgo que presentan hacia la empresa.
+
+A partir de este árbol de decisión se pueden extraer varias conclusiones relevantes para la toma de decisiones:
+
+1.  **El tipo de aseguramiento es el factor más determinante:** Los asegurados pertenecientes a los tipos ASALARIADO, ASEGURADO VOLUNTARIO, CONVENIOS ESPECIALES DE ASEGURADOS VOLUNTARIOS, PENSIONADOS EN SU PROPIO SISTEMA y CONVENIOS ESPECIALES DE TRABAJADORES INDEPENDIENTES (A, AV, CEAV, CETI y PS) presentan, en general, un riesgo muy bajo. Es un grupo grande y estable que probablemente no requiere muchas intervenciones adicionales.
+
+2.  **Entre quienes no pertenecen a esos tipos, ser extranjero aparece como una señal fuerte de riesgo:** Aunque este grupo es pequeño, concentra la mayor probabilidad de morosidad. Lo que indica que podría ser el grupo más importante para priorizar al tomar acción.
+
+3.  **Los asegurados con tipo de aseuramiento de TRABAJADOR INDEPENDIENTE muestran un riesgo mayor de morosidad en comparación con los otros tipos de seguro:** En el árbol se observa que, dentro de este grupo, el modelo predice morosidad con mayor frecuencia, especialmente cuando se combinan otras características como ser extranjero o tener salarios superiores a ₡304.000. Esto indica que los trabajadores independientes conforman un segmento donde conviene aplicar políticas de monitoreo y acompañamiento.
+
+Finalmente, el árbol sirve como una guía para saber donde enfocar recursos de prevención y cobro (en los grupos donde más probablemente se obtendrá un impacto significativo). Su utilidad radica en que simplifica los datos y presenta en una serie de rutas claras que facilitan la gestión de riesgos.
