@@ -17,8 +17,27 @@ format:
 # carga de txt a r 
 
 library(tidyverse)
+library(readr)
 
-moras <- read.csv("~/Downloads/moras.txt")
+moras <- read_csv("~/Downloads/moras.txt", 
+                  col_types =  cols(SALARIO = col_character()))
+
+moras$SALARIO <- gsub(",", ".", moras$SALARIO)
+
+
+```
+
+
+# 2
+
+```{r}
+summary(moras$IDENTIFICACION)
+
+summary(moras$EDAD)
+
+moras$SALARIO <- as.numeric(moras$SALARIO)
+summary(moras$SALARIO)
+
 ```
 
 
