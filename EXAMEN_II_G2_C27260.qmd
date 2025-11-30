@@ -14,11 +14,11 @@ format:
 # 1
 
 ```{r}
-# carga de txt a r 
-
+# Carga de paquetes
 library(tidyverse)
 library(readr)
 
+# carga de txt a r 
 moras <- read_csv("~/Downloads/moras.txt", 
                   col_types =  cols(SALARIO = col_character()))
 
@@ -31,6 +31,7 @@ moras$SALARIO <- gsub(",", ".", moras$SALARIO)
 # 2
 
 ```{r}
+# Se agregan un resumen de los 5 números por variable cuantitativa
 summary(moras$IDENTIFICACION)
 
 summary(moras$EDAD)
@@ -39,5 +40,27 @@ moras$SALARIO <- as.numeric(moras$SALARIO)
 summary(moras$SALARIO)
 
 ```
+
+# 3
+
+```{r}
+library(dplyr)
+
+moras <- moras %>% 
+  mutate(
+    # Se calcula Z-score para SALARIO y se determinan los valores atípicos.
+    # Se usa la formula de Z-score para la media y desviación se omiten los NAs. Note que si el valor era NA se mantendrá como NA.
+    ZSCORE_SALARIOS = (SALARIO - mean(SALARIO, na.rm = TRUE)) / sd(SALARIO, na.rm = TRUE),
+    
+    # Se compara con 1.96 los NA siempre quedan como NAs 
+    ATIPICO_SALARIO = abs(ZSCORE_SALARIOS) > 1.96,
+    
+    # Análogo a lo de arriba.
+    ZSCORE_EDAD = (EDAD - mean(EDAD, na.rm = TRUE)) / sd(EDAD, na.rm = TRUE),
+    ATIPICO_EDAD = abs(ZSCORE_EDAD) > 1.96
+  )
+
+```
+
 
 
