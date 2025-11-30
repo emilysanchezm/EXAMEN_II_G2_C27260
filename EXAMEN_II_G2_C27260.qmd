@@ -1,0 +1,24 @@
+---
+title: "Tarea3_CA0204_C27260"
+author: "Emily Sánchez"
+subtitle: "CA0204 - Herramientas de Ciencia de Datos I"
+institute: "Universidad de Costa Rica"
+titlepage: false
+editor: visual
+format:
+  html:
+    self-contained: true
+    embed-resources: true
+---
+
+# 1
+
+```{r}
+# carga de txt a r 
+
+library(tidyverse)
+
+moras <- read.csv("~/Downloads/moras.txt")
+```
+
+
