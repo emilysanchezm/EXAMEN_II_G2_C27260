@@ -176,6 +176,57 @@ Note que son los mismos gráficos de excel por lo que es el mismo análisis
 
 
 
+# 8
+
+```{r}
+# Se revierte el cambio que se hizo a la variable INDICADOR_MOROSO en el apartado anterior
+
+moras$INDICADOR_MOROSO <- ifelse(moras$INDICADOR_MOROSO == 1,
+                                 "SI",
+                                 ifelse(moras$INDICADOR_MOROSO == 0, "NO", NA))
+
+colSums(is.na(moras)) / nrow(moras) * 100  # Se verifica que se haya revertido bien el cambio
+
+
+# Se calcula la edad promedio por condición de morosidad
+edad_promedio <- moras %>%
+  group_by(INDICADOR_MOROSO) %>% # Agrupamos a las personas ya sea que son o no morosas
+  summarise(promedio = mean(EDAD))  # Se calulan los promedios de edades para cada grupo
+
+
+# Se trabaja sobre el tibble que se obtuvo arriba
+ggplot(edad_promedio,
+       aes(x = INDICADOR_MOROSO, y = promedio, fill = INDICADOR_MOROSO)) + # Se explicó antes
+  geom_bar(stat = "identity") + # Se explicó antes
+  labs(
+    title = "Edad promedio según morosidad",
+    # Se explicó antes
+    x = "Moroso",
+    y = "Edad promedio"
+  ) +
+  theme_minimal() +
+  scale_y_continuous(breaks = pretty_breaks(n = 10)) +
+  coord_flip() # Se cambian coordenadas para que sea horizontal
+
+
+# Mismo proceso para salario
+salario_promedio <- moras %>%
+  group_by(INDICADOR_MOROSO) %>%
+  summarise(promedio = mean(SALARIO))
+
+
+ggplot(salario_promedio,
+       aes(x = INDICADOR_MOROSO, y = promedio, fill = INDICADOR_MOROSO)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Salario promedio según morosidad", x = "Moroso", y = "Salario promedio") +
+  theme_minimal() +
+  scale_y_continuous(breaks = pretty_breaks(n = 10)) +
+  coord_flip() 
+
+```
+Note que son los mismos gráficos de excel por lo que es el mismo análisis 
+
+
 
 
 
