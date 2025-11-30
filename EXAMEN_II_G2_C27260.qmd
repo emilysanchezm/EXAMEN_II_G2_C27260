@@ -62,5 +62,14 @@ moras <- moras %>%
 
 ```
 
+# 4
+
+```{r}
+# Se saca el porcentaje de NAs por variable/ columna.
+# Se cuentan los NAs por columna, se dividen entre el número total de observaciones y se multiplica por 100 para obtener un porcentaje.
+porcentaje_na <- colSums(is.na(moras)) / nrow(moras) * 100
+porcentaje_na
+
+```
 
 
