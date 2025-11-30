@@ -124,6 +124,57 @@ categoricas <- c("SEXO", "SECTOR", "INDICADOR_ACTIVO",
 graficar_categorias(moras, categoricas)
 
 ```
+Note que son los mismos gráficos de excel por lo que es el mismo análisis 
+
+# 7
+```{r}
+library(scales)
+typeof(moras$INDICADOR_MOROSO) # Tipo caracter no funciona para el cálculo 
+
+# Se pasa la variable a numérica para poder usarla en la función
+moras$INDICADOR_MOROSO <- ifelse(moras$INDICADOR_MOROSO == "SI", 1,
+                                 ifelse(moras$INDICADOR_MOROSO == "NO", 0, NA))
+
+colSums(is.na(moras)) / nrow(moras) * 100  # Se verifica que se haya hecho bien el cambio
+
+# Función para graficar porcentaje de morosos por categoría
+graficos_morosos <- function(df, var, indicador_moroso = "INDICADOR_MOROSO") {
+  for (i in var) { # Se recorren los nombres de la var por graficar
+    # Primero se agrupa por categoría y se calcula el porcentaje de morosos 
+    resumen <- df %>%
+      group_by(.data[[i]]) %>% # Se agrupan los datos por cada categoría de la variable, se explicó arriba.
+      summarise(
+        total = n(), # Se explicó arriba
+        morosos = sum(.data[[indicador_moroso]] == 1), # Se cuentan las personas morosas, es decir las que tienen como indicador_moroso 1
+        porcentaje = morosos / total * 100 # Se calcula el porcentaje dividiendo casos de interes entre casos totales y multiplicando por 100. 
+      )
+    
+    # Luego se crean los gráficos de barras con los datos del tibble de arriba. 
+    plot <- ggplot(resumen, aes(x = .data[[i]], y = porcentaje, fill = .data[[i]])) + # se explicó antes 
+      geom_bar(stat = "identity") +  # se explicó antes 
+      labs(  # se explicó arriba 
+        title = paste("Porcentaje de personas morosas por", i),
+        x = i,
+        y = "Porcentaje (%)"
+      ) +
+      theme_minimal() +
+      theme(axis.text.x = element_blank()) + # se explicó antes 
+      scale_y_continuous(breaks = pretty_breaks(n = 10)) # se hacen más ticks para poder ver mejor los porcentajes.(Se usó en el poryecto individual)
+    print(plot)
+  }
+}
+
+# Variables que se van a graficar 
+categoricas2 <- c("SEXO", "SECTOR", "INDICADOR_ACTIVO", 
+                 "INDICADOR.EXTRANJERO", "TIPO_ASEGURAMIENTO")
+
+# Se llama a la función 
+graficos_morosos(moras, categoricas2)
+```
+
+Note que son los mismos gráficos de excel por lo que es el mismo análisis 
+
+
 
 
 
